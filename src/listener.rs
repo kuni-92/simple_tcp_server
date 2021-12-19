@@ -1,5 +1,5 @@
 use std::net::{ToSocketAddrs, TcpListener, TcpStream};
-use std::io::Read;
+use std::io::{Read, Write};
 use std::error::Error;
 
 pub struct SimpleListener {
@@ -24,15 +24,19 @@ impl SimpleListener {
     pub fn run(&self) {
         for stream in self.listener.incoming().take(2) {
             println!("Getting request!");
-            let stream = stream.unwrap();
-            let request = read_request(stream).unwrap();
+
+            let mut stream = stream.unwrap();
+            let request = read_request(&stream).unwrap();
             let request = std::str::from_utf8(&request).unwrap();
             println!("{}", request);
+
+            let response = String::from("HTTP/1.1 200 OK \r\n\r\n");
+            stream.write(response.as_bytes()).unwrap();
         }
     }
 }
 
-fn read_request(mut stream: TcpStream) -> Result<Box<[u8]>, Box<dyn Error>> {
+fn read_request(mut stream: &TcpStream) -> Result<Box<[u8]>, Box<dyn Error>> {
     let mut buffer = [0; 1024];
     match stream.read(&mut buffer) {
         Ok(_) => Ok(Box::new(buffer)),
