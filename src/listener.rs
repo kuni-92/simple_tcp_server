@@ -3,7 +3,7 @@ use std::io::Read;
 use std::error::Error;
 
 pub struct SimpleListener {
-    status: bool,
+    listener: TcpListener,
 }
 
 impl SimpleListener {
@@ -13,23 +13,22 @@ impl SimpleListener {
         match TcpListener::bind(listen_addr) {
             Ok(server) => {
                 println!("Starting TCP server.");
-               handle_server(server);
-               return SimpleListener{status: true}
+                return SimpleListener{listener: server}
             },
             Err(e) => {
                 panic!("Tcplistener binding error. Error detail:{}", e);
             },
         };
     }
-}
 
-fn handle_server(listener: TcpListener) {
-    for stream in listener.incoming().take(2) {
-        let stream = stream.unwrap();
-        println!("Getting request!");
-        let request = read_request(stream).unwrap();
-        let request = std::str::from_utf8(&request).unwrap();
-        println!("{}", request);
+    pub fn run(&self) {
+        for stream in self.listener.incoming().take(2) {
+            println!("Getting request!");
+            let stream = stream.unwrap();
+            let request = read_request(stream).unwrap();
+            let request = std::str::from_utf8(&request).unwrap();
+            println!("{}", request);
+        }
     }
 }
 
